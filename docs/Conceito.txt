@@ -1,0 +1,32 @@
+Como o fluxo funciona
+
+Fluxo B roda primeiro (criação e armazenamento do link):
+
+Admin clica "Novo Cartão" e digita a URL de destino
+Frontend manda um POST pro backend com o token JWT
+Backend checa: token é válido?
+Não → 401 → tela de erro (fim desse caminho)
+Sim → segue
+Backend consulta o banco pra saber qual foi o último ID criado
+Calcula o novo slug (ex: card16)
+Faz o INSERT no banco
+Retorna 201, frontend atualiza a tabela, cartão físico fica pronto pra ser gravado
+
+A ponte entre os dois fluxos (a seta tracejada):
+
+Coloquei uma seta pontilhada saindo do INSERT (Fluxo B) até o SELECT do Fluxo A, com a legenda "slug agora existe na tabela". Essa é a parte mais importante conceitualmente: ela mostra visualmente que o dado que o Fluxo A vai buscar só existe porque o Fluxo B rodou antes. Sem essa seta, os dois fluxos pareceriam desconectados, como se fossem dois sistemas separados.
+
+Fluxo A roda depois (leitura do cartão pelo usuário final):
+
+Alguém encosta o celular no cartão NFC → acessa dominio.com/slug
+Next.js captura essa rota dinâmica
+Faz uma chamada oculta pro backend (GET /api/redirect/slug)
+Backend monta a query e consulta o banco
+Backend checa: o link foi encontrado?
+Não → 404 → tela "cartão não configurado" (fim desse caminho)
+Sim → retorna a URL → frontend redireciona (302) → usuário chega no site final
+Por que as cores
+🟢 Verde = pontos de início/fim (nada fica "solto")
+🟡 Amarelo = decisões (onde o fluxo se ramifica)
+🔵 Azul = operações de banco de dados
+🔴 Vermelho = caminhos de erro
