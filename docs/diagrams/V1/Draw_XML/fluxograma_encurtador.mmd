@@ -1,0 +1,59 @@
+flowchart TD
+
+    subgraph FE["Frontend (Next.js)"]
+        B1(["Admin acessa /admin e clica Novo Cartao"])
+        B2[/"Insere target_url no modal"/]
+        B3["POST /api/links (JWT no header)"]
+        B5["Frontend exibe alerta de erro"]
+        B12["Atualiza tabela na tela do admin"]
+        B13(["Cartao fisico pronto para gravacao"])
+
+        A2["Captura rota dinamica /slug"]
+        A3["GET /api/redirect/slug (chamada oculta)"]
+        A8(["Renderiza: Cartao nao configurado"])
+        A10["Executa redirect HTTP 302"]
+        A11(["Usuario chega ao site destino"])
+    end
+
+    subgraph BE["Backend (FastAPI)"]
+        B4{"Token JWT valido?"}
+        B7["Consulta ultimo ID inserido"]
+        B9["Gera novo slug: cardN+1"]
+        B11["Retorna 201 Created"]
+        B_err["Retorna 401 Unauthorized"]
+
+        A4["Recebe slug e monta query"]
+        A6{"Link encontrado?"}
+        A7["Retorna 404"]
+        A9["Retorna JSON com target_url"]
+    end
+
+    subgraph DB["Banco de Dados (PostgreSQL)"]
+        B8[("SELECT MAX(id) FROM links")]
+        B10[("INSERT INTO links (slug, target_url)")]
+        A5[("SELECT target_url FROM links WHERE slug = ?")]
+    end
+
+    %% ===== FLUXO B: CRIACAO E ARMAZENAMENTO =====
+    B1 --> B2 --> B3 --> B4
+    B4 -->|Nao| B_err --> B5
+    B4 -->|Sim| B7 --> B8 --> B9 --> B10 --> B11 --> B12 --> B13
+
+    %% ===== LIGACAO ENTRE OS FLUXOS =====
+    B10 -.->|"slug agora existe na tabela"| A5
+
+    %% ===== FLUXO A: LEITURA DO CARTAO NFC =====
+    NFC(["Smartphone le tag NFC - dominio.com/slug"]) --> A2 --> A3 --> A4 --> A5
+    A5 --> A6
+    A6 -->|Nao| A7 --> A8
+    A6 -->|Sim| A9 --> A10 --> A11
+
+    classDef terminal fill:#d4edda,stroke:#28a745,stroke-width:2px
+    classDef decision fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    classDef db fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px
+    classDef error fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+
+    class B1,B13,NFC,A8,A11 terminal
+    class B4,A6 decision
+    class B8,B10,A5 db
+    class B_err,A7,B5 error

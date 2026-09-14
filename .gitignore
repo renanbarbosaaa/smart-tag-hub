@@ -1,0 +1,15 @@
+# Caches do Python
+__pycache__/
+*.pyc
+
+# Caches do Pytest (os testes que você está rodando)
+.pytest_cache/
+
+# Ambientes Virtuais (Caso você esteja usando venv, o que é uma ótima prática)
+venv/
+.venv/
+env/
+
+# Configurações de IDE (VS Code, PyCharm, etc)
+.vscode/
+.idea/

@@ -1,0 +1,50 @@
+flowchart TD
+
+    subgraph AT["Atores"]
+        ACT1(["Usuario (Visitante)"])
+        ACT2(["Site de Destino (ex: LinkedIn)"])
+    end
+
+    subgraph DV["Dispositivo / Navegador"]
+        DEV1["Tag NFC dispara abertura do navegador"]
+        DEV2["Navegador acessa https://dominio.com/slug"]
+    end
+
+    subgraph FE["Frontend (Next.js)"]
+        FE1["Middleware captura rota dinamica /slug"]
+        FE2["Exibe estado de carregamento (spinner)"]
+        FE3["Envia GET /api/redirect/slug"]
+        FE_err["Renderiza pagina: Cartao nao configurado"]
+        FE_final["Executa redirect HTTP 302"]
+    end
+
+    subgraph BE["Backend (FastAPI)"]
+        BE1["Recebe slug e sanitiza input"]
+        BE2["Monta query de busca"]
+        BE3{"Registro encontrado no banco?"}
+        BE4["Retorna 404"]
+        BE_log["Registra acesso (assincrono)"]
+        BE5["Retorna JSON com target_url"]
+    end
+
+    subgraph DB["Banco de Dados (PostgreSQL)"]
+        DB1[("SELECT target_url FROM links WHERE slug = ?")]
+        DB2[("INSERT INTO access_logs (slug, timestamp)")]
+    end
+
+    ACT1 --> DEV1 --> DEV2 --> FE1 --> FE2 --> FE3 --> BE1 --> BE2 --> DB1 --> BE3
+    BE3 -->|Nao| BE4 --> FE_err --> ACT1
+    BE3 -->|Sim| BE_log
+    BE_log -.->|"fire-and-forget"| DB2
+    BE_log --> BE5 --> FE_final --> ACT2
+
+    classDef ator fill:#e2d9f3,stroke:#6f42c1,stroke-width:2px
+    classDef terminal fill:#d4edda,stroke:#28a745,stroke-width:2px
+    classDef decision fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    classDef db fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px
+    classDef error fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+
+    class ACT1,ACT2 ator
+    class BE3 decision
+    class DB1,DB2 db
+    class BE4,FE_err error
