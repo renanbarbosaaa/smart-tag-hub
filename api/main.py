@@ -6,7 +6,7 @@ app = FastAPI(title="Smart Tag Hub - Encurtador NFC", version="1.0")
 
 # temporary in memory data base, specially for validating the web rote
 FAKE_DB = {
-    "aX7b9Y": "https://www.pathto.com/test1a"
+    "aX7b9Y": "https://www.linkedin.com.br/renanbarbosaaa"
 }
 
 @app.get("/")
