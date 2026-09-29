@@ -2,7 +2,7 @@
 
 A small backend service that redirects short links, built for NFC tags. Write one short link on a tag once, then change where it points whenever you want.
 
-Read this in Portuguese: [README.pt-BR.md](README.pt-BR.md)
+Read this in Portuguese: [README- PT BR.md](ReadMe-PTBR.md)
 
 ## What is it?
 
