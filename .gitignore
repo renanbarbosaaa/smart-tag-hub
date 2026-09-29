@@ -13,3 +13,10 @@ env/
 # Configurações de IDE (VS Code, PyCharm, etc)
 .vscode/
 .idea/
+
+# Banco de dados local (SQLite)
+*.db
+*.sqlite3
+
+# Variáveis de ambiente e segredos
+.env
