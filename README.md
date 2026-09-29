@@ -77,6 +77,7 @@ uvicorn api.main:app --reload
 - Done: the core backend is complete and covered by automated tests.
 - Next: a production-ready database.
 - Next: an admin dashboard (front end) to view and manage all links in one place.
+- Next: track analytics based on how many times the NFC tag been read
 
 ## Author
 
