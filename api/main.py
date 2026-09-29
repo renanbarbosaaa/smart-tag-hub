@@ -18,8 +18,8 @@ from domain.validators import is_valid_slug
 from infrastructure.database import create_tables, engine
 
 _ERROR_STATUS: dict[type[DomainError], int] = {
-    InvalidUrlError: status.HTTP_422_UNPROCESSABLE_ENTITY,
-    InvalidSlugError: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    InvalidUrlError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidSlugError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     SlugAlreadyExistsError: status.HTTP_409_CONFLICT,
     SlugGenerationError: status.HTTP_503_SERVICE_UNAVAILABLE,
 }
