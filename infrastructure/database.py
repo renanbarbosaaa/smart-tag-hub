@@ -1,12 +1,11 @@
-import os
 from collections.abc import AsyncIterator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./smart_tag_hub.db")
+from api.config import get_settings
 
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(get_settings().database_url)
 SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
 
 
@@ -20,7 +19,8 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 
 async def create_tables() -> None:
-    from infrastructure import models  # noqa: F401  (registers tables on Base.metadata)
+    """Cria o schema atual apenas para desenvolvimento e testes."""
+    from infrastructure import models  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

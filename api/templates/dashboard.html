@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Meus links · Smart Tag Hub{% endblock %}
+{% block content %}
+<header class="topbar">
+  <a class="brand" href="/admin">Smart Tag Hub</a>
+  <form method="post" action="/admin/logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="button button-quiet" type="submit">Sair</button>
+  </form>
+</header>
+<main class="container">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">PAINEL ADMINISTRATIVO</p>
+      <h1>Meus links</h1>
+      <p class="muted">Crie e atualize destinos sem regravar suas tags.</p>
+    </div>
+  </div>
+
+  {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+  {% if notice %}<div class="alert alert-success" role="status">{{ notice }}</div>{% endif %}
+
+  <section class="card" aria-labelledby="create-title">
+    <h2 id="create-title">Novo link</h2>
+    <form method="post" action="/admin/links" class="create-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="grow">URL de destino
+        <input type="url" name="target_url" value="{{ target_url }}" placeholder="https://exemplo.com/pagina" maxlength="2048" required>
+      </label>
+      <label>Slug personalizado <span class="optional">opcional</span>
+        <input type="text" name="slug" value="{{ slug }}" placeholder="a1B2c3" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}">
+      </label>
+      <button type="submit" class="button button-primary">Criar link</button>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="list-title">
+    <div class="section-heading">
+      <h2 id="list-title">Links cadastrados <span class="count">{{ links|length }}</span></h2>
+      <form method="get" action="/admin" class="search-form">
+        <label class="sr-only" for="search">Buscar links</label>
+        <input id="search" type="search" name="q" value="{{ query }}" placeholder="Buscar slug ou URL" maxlength="200">
+        <button class="button button-secondary" type="submit">Buscar</button>
+      </form>
+    </div>
+    {% if links %}
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Slug</th><th>Destino</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for link in links %}
+          <tr>
+            <td><strong class="slug">{{ link.slug }}</strong></td>
+            <td class="destination"><a href="{{ link.target_url }}" target="_blank" rel="noopener noreferrer">{{ link.target_url }}</a></td>
+            <td><span class="badge {{ 'badge-active' if link.is_active else 'badge-inactive' }}">{{ 'Ativo' if link.is_active else 'Inativo' }}</span></td>
+            <td>{{ link.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="button button-small button-secondary" data-copy="{{ short_url(link.slug) }}">Copiar URL</button>
+                <a class="button button-small button-quiet" href="/admin/links/{{ link.slug }}/edit">Editar</a>
+                <form method="post" action="/admin/links/{{ link.slug }}/status">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <input type="hidden" name="action" value="{{ 'deactivate' if link.is_active else 'activate' }}">
+                  <button class="button button-small button-quiet" type="submit">{{ 'Desativar' if link.is_active else 'Ativar' }}</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>{{ 'Nenhum resultado encontrado' if query else 'Nenhum link cadastrado' }}</h3>
+        <p>{{ 'Tente outra busca.' if query else 'Use o formulário acima para criar seu primeiro link.' }}</p>
+      </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Editar {{ link.slug }} · Smart Tag Hub{% endblock %}
+{% block content %}
+<header class="topbar"><a class="brand" href="/admin">Smart Tag Hub</a></header>
+<main class="container narrow">
+  <a class="back-link" href="/admin">← Voltar para meus links</a>
+  <section class="card">
+    <p class="eyebrow">EDITAR LINK</p>
+    <h1>{{ link.slug }}</h1>
+    <p class="muted">URL curta: <a href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a></p>
+    <p><span class="badge {{ 'badge-active' if link.is_active else 'badge-inactive' }}">{{ 'Ativo' if link.is_active else 'Inativo' }}</span></p>
+    {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/links/{{ link.slug }}/edit" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>URL de destino
+        <input type="url" name="target_url" value="{{ link.target_url }}" maxlength="2048" required autofocus>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="button button-primary">Salvar destino</button>
+        <a class="button button-quiet" href="/admin">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</main>
+{% endblock %}

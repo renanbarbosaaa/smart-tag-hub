@@ -1,63 +1,52 @@
 # Smart Tag Hub
 
-A small backend service that redirects short links, built for NFC tags. Write one short link on a tag once, then change where it points whenever you want.
+A backend and admin panel for managing URLs used by NFC tags. Write a short URL to a tag once and update its destination whenever needed.
 
-*Read this in Portuguese: [README- PT BR.md](ReadMe-PTBR.md)*
+*Leia em português: [ReadMe-PTBR.md](ReadMe-PTBR.md)*
 
-## What is it?
+## Implemented features
 
-Smart Tag Hub is a link redirection service. The NFC tag stores only a short link. When someone taps the tag with a phone, the service finds the real destination and sends the person there, very fast.
+- Short links with random or custom slugs.
+- Link listing and search.
+- Destination updates.
+- Activation and deactivation without deleting records.
+- Temporary (`307`) public redirects at `/r/{slug}`.
+- Backward compatibility with legacy `/{slug}` URLs.
+- Friendly public error pages.
+- Responsive admin panel served by FastAPI.
+- Single-admin authentication with Argon2, signed sessions, CSRF protection, and login throttling.
+- Session-protected management API.
+- SQLite for development and PostgreSQL support for production.
+- Alembic migrations, health check, Dockerfile, and CI with tests and Ruff.
 
-## Why I built it
-
-I sell NFC cards that send people to places like a Google review page, an Instagram profile, a WhatsApp chat or a landing page.
-
-I wanted a system of my own for three reasons:
-
-- I do not want to depend on platforms owned by other people.
-- NFC chips have very little memory. Saving only a short link leaves the chip space free.
-- Customers often ask to change the destination later. With a normal tag, that means rewriting the chip. With this service, I only change the destination in my system and the card keeps working.
-
-## How it works
-
-1. A short link is written on the NFC tag once.
-2. A person taps the tag with their phone.
-3. The service looks up the short link and sends the phone to the current destination.
-4. When a customer wants a new destination, only the stored destination changes. The tag stays exactly the same.
-
-## Features
-
-- Create short links for any valid web address.
-- Fast redirect to the current destination.
-- Temporary redirects on purpose, so browsers do not remember old destinations.
-- Input validation for short links and destination addresses.
-- Clear error messages for unknown or badly formatted links.
-- Automated test suite.
+The current scope is intentionally **single-admin**. Customer accounts, per-user ownership, and analytics are future enhancements.
 
 ## Tech stack
 
-- Python
-- FastAPI
-- SQLAlchemy (async)
-- SQLite for local development
-- pytest and httpx for testing
+- Python 3.11+
+- FastAPI, Starlette, and Jinja2
+- Async SQLAlchemy
+- SQLite/aiosqlite and PostgreSQL/asyncpg
+- Alembic
+- Pytest, HTTPX, and Ruff
+- Uvicorn and Docker
 
 ## Architecture
 
-The project follows a simplified Clean Architecture, split into layers with clear responsibilities:
-
 | Layer | Responsibility |
 | --- | --- |
-| `api` | Receives web requests and returns responses. |
-| `domain` | Business rules and validations. It knows nothing about the database. |
-| `infrastructure` | Talks to the database and implements what the domain asks for. |
-| `tests` | Automated tests for the rules and for the full flow. |
+| `api/` | Public routes, management API, admin panel, authentication, templates, and settings. |
+| `domain/` | Entity, business rules, validation, and repository contract. |
+| `infrastructure/` | Database, ORM model, and SQLAlchemy repository. |
+| `migrations/` | Versioned schema changes with Alembic. |
+| `tests/` | Unit and integration tests using in-memory SQLite. |
+| `docs/` | Operational documentation and conceptual diagrams. |
 
-Because the domain does not depend on the database, the storage can change later without rewriting the business rules.
+The domain is independent from storage. Both the API and the admin panel use the same `LinkService`.
 
 ## Running locally
 
-You need Python 3.11 or newer.
+### 1. Install
 
 ```bash
 python -m venv .venv
@@ -67,18 +56,79 @@ python -m venv .venv
 # macOS / Linux
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+### 2. Configure the administrator
+
+Copy `.env.example` to `.env`, then generate a session secret:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Set it as `SECRET_KEY`. Generate an Argon2 password hash without storing the plain password:
+
+```bash
+python -m scripts.generate_password_hash
+```
+
+Set the generated value as `ADMIN_PASSWORD_HASH` in `.env`, enclosed in single quotes.
+
+### 3. Migrate and start
+
+```bash
+alembic upgrade head
 pytest
 uvicorn api.main:app --reload
 ```
 
-## Project status
+Available URLs:
 
-- Done: the core backend is complete and covered by automated tests.
-- Next: a production-ready database.
-- Next: an admin dashboard (front end) to view and manage all links in one place.
-- Next: track analytics based on how many times the NFC tag been read
+- Admin: `http://localhost:8000/admin`
+- Development API docs: `http://localhost:8000/docs`
+- Health check: `http://localhost:8000/_health`
+- URL to write to an NFC tag: `http://localhost:8000/r/{slug}`
+
+Use your final HTTPS domain when writing production tags.
+
+### Databases created before Alembic
+
+If an old database already has the `links` table but no `alembic_version` table, mark the baseline before upgrading:
+
+```bash
+alembic stamp 0001
+alembic upgrade head
+```
+
+Back up the database first. New databases only need `alembic upgrade head`.
+
+## Management API
+
+These routes require the session created by the admin login. The original `POST /links` remains available as a creation alias; the other management endpoints use `/api/links`:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/links?q=` | List and filter links. |
+| `POST` | `/api/links` | Create a link. |
+| `GET` | `/api/links/{slug}` | Get a link. |
+| `PATCH` | `/api/links/{slug}` | Update `target_url` and/or `is_active`. |
+
+## Quality checks
+
+```bash
+pytest -q
+ruff check .
+ruff format --check .
+pip-audit
+```
+
+The CI workflow runs these checks with Python 3.12 on pushes to `main` and Pull Requests.
+
+## Deployment
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for production settings, PostgreSQL, migrations, HTTPS, backups, and the launch checklist. The Dockerfile is provider-independent.
 
 ## Author
 
-Renan Barbosa - [GitHub](https://github.com/renanbarbosaaa)
+Renan Barbosa — [GitHub](https://github.com/renanbarbosaaa)

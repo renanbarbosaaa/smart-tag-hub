@@ -24,6 +24,23 @@ class InMemoryLinkRepository:
     async def get_target_url(self, slug: str) -> str | None:
         return self.links.get(slug)
 
+    async def get_by_slug(self, slug: str) -> Link | None:
+        target_url = self.links.get(slug)
+        return Link(slug=slug, target_url=target_url) if target_url else None
+
+    async def list_links(self, query: str | None = None) -> list[Link]:
+        return [
+            Link(slug=slug, target_url=target_url)
+            for slug, target_url in self.links.items()
+            if not query or query in slug or query in target_url
+        ]
+
+    async def save(self, link: Link) -> Link | None:
+        if link.slug not in self.links:
+            return None
+        self.links[link.slug] = link.target_url
+        return link
+
 
 def factory_from(slugs: list[str]) -> Iterator[str]:
     return iter(slugs)
@@ -55,3 +72,21 @@ async def test_service_gives_up_after_max_attempts() -> None:
     with pytest.raises(SlugGenerationError):
         await service.create_link(TARGET)
     assert MAX_SLUG_ATTEMPTS > 1
+
+
+async def test_service_updates_target_url() -> None:
+    repo = InMemoryLinkRepository()
+    service = LinkService(repo)
+    await service.create_link(TARGET, "abc123")
+
+    updated = await service.update_link("abc123", target_url="https://example.com/novo")
+
+    assert updated is not None
+    assert updated.target_url == "https://example.com/novo"
+    assert repo.links["abc123"] == "https://example.com/novo"
+
+
+async def test_service_returns_none_when_updating_unknown_link() -> None:
+    service = LinkService(InMemoryLinkRepository())
+
+    assert await service.update_link("abc123", target_url=TARGET) is None

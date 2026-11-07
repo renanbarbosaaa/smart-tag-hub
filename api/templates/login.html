@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Acesso administrativo · Smart Tag Hub{% endblock %}
+{% block content %}
+<main class="auth-layout">
+  <section class="card auth-card" aria-labelledby="login-title">
+    <div class="brand-mark" aria-hidden="true">ST</div>
+    <p class="eyebrow">SMART TAG HUB</p>
+    <h1 id="login-title">Acesso administrativo</h1>
+    <p class="muted">Gerencie os destinos das suas tags NFC.</p>
+    {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/login" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Usuário
+        <input type="text" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>Senha
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="button button-primary">Entrar</button>
+    </form>
+  </section>
+</main>
+{% endblock %}
