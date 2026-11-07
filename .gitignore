@@ -20,3 +20,7 @@ env/
 
 # Variáveis de ambiente e segredos
 .env
+
+# Backups locais e cache do Ruff
+backups/
+.ruff_cache/

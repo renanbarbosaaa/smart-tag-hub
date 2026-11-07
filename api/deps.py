@@ -8,7 +8,9 @@ from infrastructure.database import get_session
 from infrastructure.repositories import SQLAlchemyLinkRepository
 
 
-def get_link_service(session: Annotated[AsyncSession, Depends(get_session)]) -> LinkService:
+def get_link_service(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> LinkService:
     return LinkService(SQLAlchemyLinkRepository(session))
 
 

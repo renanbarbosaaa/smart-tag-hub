@@ -10,16 +10,13 @@ def is_valid_slug(slug: str) -> bool:
 
 
 def is_valid_url(url: str) -> bool:
-    if len(url) > MAX_URL_LENGTH:
+    if not url or len(url) > MAX_URL_LENGTH or any(char.isspace() for char in url):
         return False
 
     try:
         parsed_url = urlparse(url)
+        _ = parsed_url.port
     except ValueError:
         return False
 
-    return (
-        parsed_url.scheme in ALLOWED_SCHEMES
-        and bool(parsed_url.netloc)
-        and bool(parsed_url.path)
-    )
+    return parsed_url.scheme in ALLOWED_SCHEMES and bool(parsed_url.hostname)

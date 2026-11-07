@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Index, String
+from sqlalchemy import Boolean, DateTime, Index, String, true
 from sqlalchemy.orm import Mapped, mapped_column
 
 from infrastructure.database import Base
@@ -14,3 +14,6 @@ class LinkModel(Base):
     slug: Mapped[str] = mapped_column(String(6))
     target_url: Mapped[str] = mapped_column(String(2048))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=true()
+    )
